@@ -1,0 +1,137 @@
+---
+title: "BrewBeers"
+author: "Andy Nguyen, K. Theobald and Anthony Yeung"
+date: "2/14/2019"
+output: 
+  html_document:
+    keep_md: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## The analysis of 2410 different craft beers from 558 breweries throughout the United States.
+
+``` {r DataImport}
+# Functions to import the data into R. The argument path files provided are relative.
+Beers <- read.csv("Data/Beers.csv")
+Breweries <- read.csv("Data/Breweries.csv")
+```
+
+### __Question 1__: How many breweries are in each state? (Include DC)
+  * These are the following breweries per state including the District of Columbia: Alaska (AK) has 7, Alabama (AL) has 3, Arkansas (AR) has 2, Arizona (AZ) has 11, California (CA) has 39, Colorado (CO) has 47, Connecticut (CT) has 8, District of Columbia (DC) has 1, Delaware (DE) has 2, Florida (FL) has 15, Georgia (GA) has 7, Hawaii (HI) has 4, Iowa (IA) has 5, Indaho (ID) has 5, Illinois (IL) has 18, Indiana (IN) has 22, Kansas (KS) has 3, Kentucky (KY) has 4, Louisiana (LA) has 5, Massachusetts (MA) has 23, Maryland (MD) has 7, Maine (ME) has 9, Michigan (MI) has 32, Minnesota (MN) has 12, Missouri (MO) has 9, Mississippi (MS) has 2, Montana (MT) has 9, North Carolina (NC) has 19, North Dakota (ND) has 1, Nebraska (NE) has 5, New Hampshire (NH) has 3, New Jersey (NJ) has 3, New Mexico (NM) has 4, Nevada (NV) has 2, New York (NY) has 16, Ohio (OH) has 15, Oklahoma (OK) has 6, Oregon (OR) has 29, Pennsylvania (PA) has 25, Rhode Island (RI) has 5, South Carolina (SC) has 4, South Dakota (SD) has 1, Tennessee (TN) has 3, Texas (TX) has 28, Utah (UT) has 4, Virginia (VA) has 16, Vermont (VT) has 10, Washington (WA) has 23, Wisconsin (WI) has 20, West Virginia (WV) has 1, and Wyoming (WY) has 4.
+``` {r BreweriesPerState}
+# table() function cross-classifies factors of the State variable in the Breweries dataset to output table of number of breweries in each state
+## as.data.frame() function coerces the table into a dataframe type in R
+BreweriesPerState <- as.data.frame(table(Breweries$State))
+
+# colnames() function creates human-readable variable names for the BreweriesPerState dataframe
+colnames(BreweriesPerState) <- c("State","Number of Breweries")
+BreweriesPerState
+
+# write.csv() creates a csv file from the BreweriesPerState dataframe
+write.csv(BreweriesPerState, file = "BreweriesPerState.csv")
+```
+
+### __Question 2__: Merge beer data with the breweries data. Print the first 6 observations and the last 6 observations to check the merged file.
+``` {r MergeData}
+# colnames() function changes the name of the column at the designated column index
+## First and second lines are executed so that the column label "Name" will not be confused as Beer or Brewery name once the two data sets are merged
+## The third line is executed so that the two data sets can be merged by the same variable name "Brewery_id"
+colnames(Beers)[colnames(Beers)=="Name"] <- "Beer Name"
+colnames(Breweries)[colnames(Breweries)=="Name"] <- "Brewery Name"
+colnames(Breweries)[colnames(Breweries)=="Brew_ID"] <- "Brewery_id"
+
+# CraftBeers is the object created from the merge() function of the Beers and Breweries data on the variable "Brewery_id"
+CraftBeers <- merge(x = Beers, y = Breweries, by = "Brewery_id", all = TRUE)
+
+# The head() function displays the first 6 observations and the tail() function displays the last 6 observations of the merged file
+head(CraftBeers,n=6)
+tail(CraftBeers,n=6)
+```
+
+
+### __Question 3__: Report the number of NA's in each column.
+  * Conclusion: There are 1005 NA values in the IBU column and 62 NA values in the ABV column for a total of 1067 NA values.
+``` {r NAs}
+# N.ColTotal is an object that stores the sum of NA values for each column in the CraftBeers dataset
+NA.ColTotal<-colSums(is.na(CraftBeers))
+NA.ColTotal
+```
+  
+  
+### __Question 4__: Compute the median alcohol content and international bitterness unit for each state. Plot a bar chart to compare.
+  * The median alchol content and international bitterness unit for each state is shown in the table below.
+``` {r Medians}
+# medians is a data frame that stores the median values of alcohol content (ABV) and international bitterness unit (IBU) for beers in each state
+## aggregate() function subsets the two variables "ABV" and "IBU" in CraftBeers by State and computes the median summary statistic for each while excluding the NA values
+## colnames() function appropriately renames the subsetting factor (States) for the variables "ABV" and "IBU" from the CraftBeers data
+medians <- aggregate(CraftBeers[,c("ABV","IBU")],list(CraftBeers$State),median,na.rm=TRUE)
+colnames(medians)[1] <- "State"
+
+# complete.cases() function will subset the rows in the medians data that contain no missing values (NAs)
+medians <- medians[complete.cases(medians),]
+medians
+
+library(ggplot2)
+MedianIBU <- ggplot(data = medians, aes(x = State, y = IBU, fill = State, na.rm = TRUE)) +
+                   geom_bar(stat = "identity", position="dodge") + 
+                   labs(title = "Median International Bitterness Units of Beers in Each State", x = "State", y = "Median International Bitterness Units (IBU)") +
+                   theme(plot.title = element_text(hjust = 0.5)) + coord_flip()
+MedianABV <- ggplot(data = medians, aes(x = State, y = ABV, fill = State, na.rm = TRUE)) +
+                   geom_bar(stat = "identity", position="dodge") + 
+                   labs(title = "Median Alcohol Content By Volume of Beers in Each State", x = "State", y = "Alcohol By Volume (ABV)") +
+                   theme(plot.title = element_text(hjust = 0.5)) + coord_flip()
+MedianIBU
+MedianABV
+```
+
+### __Question 5__: Which state has the maximum alcoholic (ABV) beer? Which state has the most bitter (IBU) beer?
+  * Conclusion: The state with the maximum alcoholic (ABV) beer is Colorado (CO).The state with the most bitter (IBU) beer is Oregon (OR).
+``` {r Maximums}
+# which.max() function returns the index of the maximum value of the specified column in the CraftBeers dataset
+## the result of the which.max() function placed inside the extraction operators will return the observation (State) that had the max value
+CraftBeers$State[which.max(CraftBeers$ABV)]
+CraftBeers$State[which.max(CraftBeers$IBU)]
+```
+
+
+### __Question 6__: Summary statistics for the ABV variable.
+  * Minimum ABV is 0.001, 1st Quartile 0.05, Median 0.056, Mean 0.05977, 3rd Quartile 0.067 and Maximumm ABV is 0.128. The total NA's in the ABV data frame CraftBeers are 62.
+``` {r Summary Stats}
+# summary() function returns the summaries of the various model fitting functions for the ABV variable (minimum, first quartile, median, mean, third quartile, maximum, # of NAs) 
+summary(CraftBeers$ABV)
+```
+
+
+### __Question 7__: Is there an apparent relationship between the bitterness of the beer and its alcoholic content? Draw a scatter plot.
+  * Conclusion: There is a linear relationship between ABV and IBU. The linear correlation coefficient between ABV and IBU is 0.67, indicating a strong relationship in which high values of IBU are generally correlated with ABV. However, this is not a direct correlation. The data demonstrates there are more beers containing both lower Alcohol by Volume (ABV) and with a less bitter taste (IBU) within the US. The strongest bitter taste (IBU) with over 125 IBU's does not contain the highest alcohol content (ABV). In fact, the highest Alcohol by Volume (ABV) with a near .125 ABV contains a moderate bitterness taste (IBU) with a little over 75 IBU's.
+```{r Correlation}
+# complete.cases() function will subset the rows so that they contain no missing values (NAs)
+## ggplot() function creates a scatter plot of IBU and ABV using geom_smooth() function to create a linear regression line
+IBUvsABV <- ggplot(data=CraftBeers[complete.cases(CraftBeers),],aes(x=IBU,y=ABV)) + 
+            geom_point(color = "burlywood") + 
+            geom_smooth(method = lm, se = FALSE, color = "black") +
+            labs(title = "Correlation between Bitterness and Alcohol Content for Craft Beers in the United States", x = "International Bitterness Units (IBU)", y = "Alcohol by Volume (ABV)") +
+            theme(plot.title = element_text(hjust = 0.5))
+IBUvsABV
+
+# lm() function fits the ABV and IBU variables of the CraftBeers dataset with a linear model using ABV as the response variable and IBU as the explanatory variable
+# summary() function produces the result summaries of the linear model fit
+# the square root of the R^2 value provides the correlation coefficient for the linear fit model of ABV and IBU
+LinearCorrelation <- lm(ABV ~ IBU, data = CraftBeers)
+summary(LinearCorrelation)
+R_squared <- 0.4493
+Correlation.ABV_IBU <- sqrt(R_squared)
+Correlation.ABV_IBU
+```
+
+
+### __Session Info.__
+
+```{r Session}
+sessionInfo()
+```
+
