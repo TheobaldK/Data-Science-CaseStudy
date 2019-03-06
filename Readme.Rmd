@@ -1,0 +1,13 @@
+# MSDS_BeerBuddies
+We present an analysis of 2410 different craft beers from 558 breweries throughout the United States.
+
+In our analysis of the current beer market, we address potential brewery locations and production guidelines for any entrepreneurs venturing into the beer industry.  Additionally, we dissect the beer market by state (including DC) and our results will assist to the expansion of local breweries.
+
+We specifically examine the relationship between International Bitterness Units (IBU) and Alcohol by Volume (ABV) in the beer brewing process to structure the production guidelines for your ideal beer. General reference, we detail the brewing process of the beer styles at the two bitterness extremes: Lagers and Ales. Example of India Pale Ales and Imperial IPAs are on the high end of the IBU index.  
+
+*Packages:* writexl_1.1, bindrcpp_0.2.2, dplyr_0.7.8, plyr_1.8.4, ggplot2_3.1.0.
+
+*RStudio Base Packages:* stats, graphics, grDevices, utils, datasets, methods, base.
+
+*Functions:* 
+read.csv(), table(), as.data.frame(), colnames(), write.csv(), colnames(), merge(), head(), colSums(), aggregate(), complete.cases(), which.max(), summary(), lm(), ggplot(), sqrt(), sessionInfo().
